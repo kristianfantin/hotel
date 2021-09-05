@@ -17,7 +17,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.UnsupportedEncodingException;
-import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,9 +31,10 @@ import static org.mockito.Mockito.when;
 @FunctionalTest
 class HotelControllerTest {
 
-    private static final String URL_TEMPLATE = "/api/hotels/avail";
+    private static final String URL_TEMPLATE = "/api/hotels";
     private static final String PORTO_SEGURO = "1032";
     private static final String CITY_NAME = "Porto Seguro";
+    private static final long HOTEL_ID = 1L;
 
     private final MockMvc mockMvc;
 
@@ -48,11 +48,11 @@ class HotelControllerTest {
 
     @Test
     void shouldFindHotel() throws Exception {
-        when(restTemplate.getForObject(anyString(), any())).thenReturn(getDescriptionFromAvail());
+        when(restTemplate.getForObject(anyString(), any())).thenReturn(getDataFromUrl());
 
         Map<String, Object> params = new HashMap<>();
         params.put("cityId", PORTO_SEGURO);
-        final MockHttpServletRequestBuilder request = getMockHttpServletRequestBuilderGET(params, URL_TEMPLATE);
+        final MockHttpServletRequestBuilder request = getMockHttpServletRequestBuilderGET(params, URL_TEMPLATE + "/avail");
         final ResultActions resultActions = mockMvc.perform(request);
 
         assertEquals(HttpStatus.OK.value(), resultActions.andReturn().getResponse().getStatus());
@@ -67,6 +67,36 @@ class HotelControllerTest {
 
         Map<String, Object> params = new HashMap<>();
         params.put("cityId", 0);
+        final MockHttpServletRequestBuilder request = getMockHttpServletRequestBuilderGET(params, URL_TEMPLATE + "/avail");
+        final ResultActions resultActions = mockMvc.perform(request);
+
+        assertEquals(HttpStatus.NOT_FOUND.value(), resultActions.andReturn().getResponse().getStatus());
+        assertNotNull(getContentAsString(resultActions));
+        assertNotEquals("", getContentAsString(resultActions));
+        Assertions.assertTrue(getContentAsString(resultActions).contains("No record found for id 0"));
+    }
+
+    @Test
+    void shouldFindHotelByHotelId() throws Exception {
+        when(restTemplate.getForObject(anyString(), any())).thenReturn(getDataFromUrl());
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("hotelId", HOTEL_ID);
+        final MockHttpServletRequestBuilder request = getMockHttpServletRequestBuilderGET(params, URL_TEMPLATE);
+        final ResultActions resultActions = mockMvc.perform(request);
+
+        assertEquals(HttpStatus.OK.value(), resultActions.andReturn().getResponse().getStatus());
+        assertNotNull(getContentAsString(resultActions));
+        assertNotEquals("", getContentAsString(resultActions));
+    }
+
+    @Test
+    void shouldNotFindAnyHotelWhenHotelIdIsZero() throws Exception {
+        CityDTO[] empty = {};
+        when(restTemplate.getForObject(anyString(), any())).thenReturn(empty);
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("hotelId", 0);
         final MockHttpServletRequestBuilder request = getMockHttpServletRequestBuilderGET(params, URL_TEMPLATE);
         final ResultActions resultActions = mockMvc.perform(request);
 
@@ -80,7 +110,7 @@ class HotelControllerTest {
         return resultActions.andReturn().getResponse().getContentAsString();
     }
 
-    private CityDTO[] getDescriptionFromAvail() {
+    private CityDTO[] getDataFromUrl() {
         final List<CityDTO> list = List.of(getPortoSeguroCity());
         CityDTO[] cities = new CityDTO[list.size()];
         return list.toArray(cities);
@@ -88,7 +118,7 @@ class HotelControllerTest {
 
     private CityDTO getPortoSeguroCity() {
         return CityDTO.builder()
-                .id(1L)
+                .id(HOTEL_ID)
                 .cityCode(Long.valueOf(PORTO_SEGURO))
                 .cityName(CITY_NAME)
                 .name("Hotel Teste 1")
@@ -102,11 +132,11 @@ class HotelControllerTest {
 
     private RoomDTO getRoomStandard() {
         return RoomDTO.builder()
-                .roomID(1L)
+                .roomID(HOTEL_ID)
                 .categoryName("Standard")
                 .price(PriceDTO.builder()
-                        .child(BigDecimal.valueOf(591.06))
-                        .adult(BigDecimal.valueOf(854.74))
+                        .child(591.06)
+                        .adult(854.74)
                         .build())
                 .build();
     }
