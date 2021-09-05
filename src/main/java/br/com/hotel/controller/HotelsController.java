@@ -16,13 +16,13 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/hotels")
+@RequestMapping("/api/hotels")
 public class HotelsController {
 
     private final HotelGateway gateway;
 
     @ApiOperation(value = "Hotels search by ID City")
-    @GetMapping(value = "/avail/{cityId}")
+    @GetMapping(value = "/avail")
     @ResponseStatus(HttpStatus.OK)
     public List<CityDTO> getAvailCity(HttpServletRequest request, @RequestParam Long cityId) {
         return gateway.find(request, cityId);
