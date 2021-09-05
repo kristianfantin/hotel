@@ -18,5 +18,6 @@ spring:
       path: /h2-console
 
 api:
-  descricao: https://cvcbackendhotel.herokuapp.com/hotels/avail/{ID_da_Cidade}
-  detalhe: https://cvcbackendhotel.herokuapp.com/hotels/{ID_Do_Hotel}
+  url:
+    description: https://cvcbackendhotel.herokuapp.com/hotels/avail/{ID_da_Cidade}
+    detail: https://cvcbackendhotel.herokuapp.com/hotels/{ID_Do_Hotel}
