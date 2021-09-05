@@ -21,11 +21,18 @@ public class HotelsController {
 
     private final HotelGateway gateway;
 
+    @ApiOperation(value = "Hotels search by ID Hotel")
+    @GetMapping
+    @ResponseStatus(HttpStatus.OK)
+    public CityDTO getHotel(HttpServletRequest request, @RequestParam Long hotelId) {
+        return gateway.findByHotel(hotelId);
+    }
+
     @ApiOperation(value = "Hotels search by ID City")
     @GetMapping(value = "/avail")
     @ResponseStatus(HttpStatus.OK)
     public List<CityDTO> getAvailCity(HttpServletRequest request, @RequestParam Long cityId) {
-        return gateway.find(request, cityId);
+        return gateway.findByCity(cityId);
     }
 
 }
