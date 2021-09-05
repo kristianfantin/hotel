@@ -2,8 +2,8 @@ package br.com.hotel.controller;
 
 import br.com.hotel.config.FunctionalTest;
 import br.com.hotel.http.dto.CityDTO;
-import br.com.hotel.http.dto.PriceDTO;
-import br.com.hotel.http.dto.RoomDTO;
+import br.com.hotel.utils.MockDataHotel;
+import br.com.hotel.utils.MockRequestBuilderUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +18,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -32,26 +31,29 @@ import static org.mockito.Mockito.when;
 class HotelControllerTest {
 
     private static final String URL_TEMPLATE = "/api/hotels";
-    private static final String PORTO_SEGURO = "1032";
-    private static final String CITY_NAME = "Porto Seguro";
-    private static final long HOTEL_ID = 1L;
 
     private final MockMvc mockMvc;
+    private final MockDataHotel mockDataHotel;
+    private final MockRequestBuilderUtils requestBuilderUtils;
 
     @MockBean
     private RestTemplate restTemplate;
 
     @Autowired
-    HotelControllerTest(MockMvc mockMvc) {
+    HotelControllerTest(MockMvc mockMvc,
+                        MockDataHotel mockDataHotel,
+                        MockRequestBuilderUtils requestBuilderUtils) {
         this.mockMvc = mockMvc;
+        this.mockDataHotel = mockDataHotel;
+        this.requestBuilderUtils = requestBuilderUtils;
     }
 
     @Test
     void shouldFindHotel() throws Exception {
-        when(restTemplate.getForObject(anyString(), any())).thenReturn(getDataFromUrl());
+        when(restTemplate.getForObject(anyString(), any())).thenReturn(mockDataHotel.getDataFromUrl());
 
         Map<String, Object> params = new HashMap<>();
-        params.put("cityId", PORTO_SEGURO);
+        params.put("cityId", MockDataHotel.PORTO_SEGURO);
         final MockHttpServletRequestBuilder request = getMockHttpServletRequestBuilderGET(params, URL_TEMPLATE + "/avail");
         final ResultActions resultActions = mockMvc.perform(request);
 
@@ -78,10 +80,10 @@ class HotelControllerTest {
 
     @Test
     void shouldFindHotelByHotelId() throws Exception {
-        when(restTemplate.getForObject(anyString(), any())).thenReturn(getDataFromUrl());
+        when(restTemplate.getForObject(anyString(), any())).thenReturn(mockDataHotel.getDataFromUrl());
 
         Map<String, Object> params = new HashMap<>();
-        params.put("hotelId", HOTEL_ID);
+        params.put("hotelId", MockDataHotel.HOTEL_ID);
         final MockHttpServletRequestBuilder request = getMockHttpServletRequestBuilderGET(params, URL_TEMPLATE);
         final ResultActions resultActions = mockMvc.perform(request);
 
@@ -110,46 +112,8 @@ class HotelControllerTest {
         return resultActions.andReturn().getResponse().getContentAsString();
     }
 
-    private CityDTO[] getDataFromUrl() {
-        final List<CityDTO> list = List.of(getPortoSeguroCity());
-        CityDTO[] cities = new CityDTO[list.size()];
-        return list.toArray(cities);
-    }
-
-    private CityDTO getPortoSeguroCity() {
-        return CityDTO.builder()
-                .id(HOTEL_ID)
-                .cityCode(Long.valueOf(PORTO_SEGURO))
-                .cityName(CITY_NAME)
-                .name("Hotel Teste 1")
-                .rooms(getRooms())
-                .build();
-    }
-
-    private List<RoomDTO> getRooms() {
-        return List.of(getRoomStandard());
-    }
-
-    private RoomDTO getRoomStandard() {
-        return RoomDTO.builder()
-                .roomID(HOTEL_ID)
-                .categoryName("Standard")
-                .price(PriceDTO.builder()
-                        .child(591.06)
-                        .adult(854.74)
-                        .build())
-                .build();
-    }
-
-    private MockHttpServletRequestBuilder getMockHttpServletRequestBuilderGET(Map<String, Object> params,
-                                                                             String urlTemplate)  {
-
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders.get(urlTemplate)
-                .contentType(MediaType.APPLICATION_JSON);
-
-        params.forEach((nameParam, valueParam) -> request.param(nameParam, valueParam.toString()));
-
-        return request;
+    private MockHttpServletRequestBuilder getMockHttpServletRequestBuilderGET(Map<String, Object> params, String url) {
+        return requestBuilderUtils.getMockHttpServletRequestBuilderGET(params, url);
     }
 
 }
