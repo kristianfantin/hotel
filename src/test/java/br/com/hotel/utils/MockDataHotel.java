@@ -3,10 +3,12 @@ package br.com.hotel.utils;
 import br.com.hotel.http.dto.CityDTO;
 import br.com.hotel.http.dto.PriceDTO;
 import br.com.hotel.http.dto.RoomDTO;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+@RequiredArgsConstructor
 @Component
 public class MockDataHotel {
 
@@ -39,8 +41,8 @@ public class MockDataHotel {
                 .roomID(HOTEL_ID)
                 .categoryName("Standard")
                 .price(PriceDTO.builder()
-                        .child(591.06)
-                        .adult(854.74)
+                        .child(200.00)
+                        .adult(350.00)
                         .build())
                 .build();
     }

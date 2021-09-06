@@ -1,5 +1,6 @@
 package br.com.hotel.http.gateway;
 
+import br.com.hotel.domain.service.CalculateTotalPrice;
 import br.com.hotel.http.dto.CityDTO;
 import br.com.hotel.utils.ServiceExceptionBuilder;
 import lombok.RequiredArgsConstructor;
@@ -7,7 +8,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -18,6 +21,8 @@ import java.util.stream.Collectors;
 public class HotelGateway {
 
     private final RestTemplate restTemplate;
+
+    private final CalculateTotalPrice calculateTotalPrice;
 
     @Value("${api.url.description}")
     private String urlHotelSearch;
@@ -46,5 +51,12 @@ public class HotelGateway {
             return first.get();
 
         throw ServiceExceptionBuilder.throwNotFoundException(hotelId);
+    }
+
+    public List<CityDTO> find(Long cityId, LocalDate checkInDate, LocalDate checkOutDate, Integer numberOfAdults, Integer numberOfChildren) {
+        final List<CityDTO> list = findByCity(cityId);
+        Collections.unmodifiableList(list).forEach(dto -> calculateTotalPrice.execute(dto, checkInDate, checkOutDate, numberOfAdults, numberOfChildren));
+
+        return list;
     }
 }

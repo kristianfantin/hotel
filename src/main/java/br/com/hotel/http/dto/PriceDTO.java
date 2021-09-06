@@ -12,8 +12,8 @@ import lombok.Setter;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor
 @Getter
 @Setter
 @JsonInclude(NON_NULL)

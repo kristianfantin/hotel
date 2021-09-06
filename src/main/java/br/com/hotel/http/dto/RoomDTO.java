@@ -9,11 +9,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor
 @Getter
 @Setter
 @JsonInclude(NON_NULL)
@@ -24,6 +26,9 @@ public class RoomDTO {
 
     @ApiModelProperty(notes = "Name of Category")
     private String categoryName;
+
+    @ApiModelProperty(notes = "Calculated Total Price")
+    private BigDecimal totalPrice;
 
     @ApiModelProperty(notes = "Price")
     private PriceDTO price;
