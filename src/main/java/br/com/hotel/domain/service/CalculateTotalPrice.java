@@ -16,15 +16,11 @@ public class CalculateTotalPrice {
 
     public void execute(CityDTO dto, LocalDate checkInDate, LocalDate checkOutDate, Integer numberOfAdults, Integer numberOfChildren) {
         final long dias = checkInDate.until(checkOutDate, ChronoUnit.DAYS) + 1;
-        for (RoomDTO room : dto.getRooms()) {
-            final BigDecimal totalPrice = getTotal(
-                    dias,
-                    getAdultValue(numberOfAdults, room),
-                    getChildrenValue(numberOfChildren, room)
-            );
-
-            room.setTotalPrice(totalPrice);
-        }
+        dto.getRooms().forEach(room -> room.setTotalPrice(getTotal(
+                dias,
+                getAdultValue(numberOfAdults, room),
+                getChildrenValue(numberOfChildren, room)
+        )));
     }
 
     private BigDecimal getTotal(long dias, BigDecimal adultTotalValue, BigDecimal childrenTotalValue) {

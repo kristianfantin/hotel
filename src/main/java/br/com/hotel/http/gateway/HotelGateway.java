@@ -59,7 +59,7 @@ public class HotelGateway {
     }
 
     private Level configLevel() {
-        return Level.FINE;
+        return Level.INFO;
     }
 
     private CityDTO[] callSearchByCity(Long cityId) {
