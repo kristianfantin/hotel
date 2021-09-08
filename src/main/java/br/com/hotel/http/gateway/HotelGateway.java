@@ -4,59 +4,72 @@ import br.com.hotel.domain.service.CalculateTotalPrice;
 import br.com.hotel.http.dto.CityDTO;
 import br.com.hotel.utils.ServiceExceptionBuilder;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Component
 public class HotelGateway {
 
-    private final RestTemplate restTemplate;
+    private static Logger log = Logger.getLogger(HotelGateway.class.getName());
 
     private final CalculateTotalPrice calculateTotalPrice;
-
-    @Value("${api.url.description}")
-    private String urlHotelSearch;
-
-    @Value("${api.url.detail}")
-    private String urlDetailHotel;
+    private final CityIntegration cityIntegration;
+    private final HotelIntegration hotelIntegration;
 
     public List<CityDTO> findByCity(Long cityId) {
-        final String endpoint = urlHotelSearch.replace("{ID_da_Cidade}", cityId.toString());
-        final CityDTO[] cities = restTemplate.getForObject(endpoint, CityDTO[].class);
-
-        if (Arrays.stream(Objects.requireNonNull(cities)).findAny().isEmpty()) {
-            throw ServiceExceptionBuilder.throwNotFoundException(cityId);
-        }
-
+        final CityDTO[] cities = callSearchByCity(cityId);
+        checkEmpty(cityId, cities);
         return Arrays.stream(Objects.requireNonNull(cities)).collect(Collectors.toList());
     }
 
     public CityDTO findByHotel(Long hotelId) {
-        final String endpoint = urlDetailHotel.replace("{ID_Do_Hotel}", hotelId.toString());
-        final CityDTO[] cities = restTemplate.getForObject(endpoint, CityDTO[].class);
+        final CityDTO[] cities = hotelIntegration.findByHotel(hotelId);
+        if (cities.length == 0)
+            throw ServiceExceptionBuilder.throwNotFoundException(hotelId);
 
-        final Optional<CityDTO> first = Arrays.stream(Objects.requireNonNull(cities)).findFirst();
-
-        if (first.isPresent())
-            return first.get();
-
-        throw ServiceExceptionBuilder.throwNotFoundException(hotelId);
+        return cities[0];
     }
 
     public List<CityDTO> find(Long cityId, LocalDate checkInDate, LocalDate checkOutDate, Integer numberOfAdults, Integer numberOfChildren) {
-        final List<CityDTO> list = findByCity(cityId);
-        Collections.unmodifiableList(list).forEach(dto -> calculateTotalPrice.execute(dto, checkInDate, checkOutDate, numberOfAdults, numberOfChildren));
+        final LocalDateTime start = LocalDateTime.now();
+        log.log(configLevel(), "Inicio: {0}", start.format(DateTimeFormatter.ofPattern("dd/MM/yyyy hh:mm:ss")));
 
-        return list;
+        final CityDTO[] cities = callSearchByCity(cityId);
+
+        Arrays.stream(cities).forEach(dto -> calculateTotalPrice.execute(dto, checkInDate, checkOutDate, numberOfAdults, numberOfChildren));
+
+        final LocalDateTime end = LocalDateTime.now();
+        log.log(configLevel(), "Fim: {0}", end.format(DateTimeFormatter.ofPattern("dd/MM/yyyy hh:mm:ss")));
+        log.log(configLevel(),"***** TOTAL: {0}", start.until(end, ChronoUnit.SECONDS));
+
+        checkEmpty(cityId, cities);
+
+        return Arrays.stream(cities).collect(Collectors.toList());
     }
+
+    private Level configLevel() {
+        return Level.INFO;
+    }
+
+    private CityDTO[] callSearchByCity(Long cityId) {
+        return cityIntegration.find(cityId);
+    }
+
+    private void checkEmpty(Long cityId, CityDTO[] cities) {
+        if (Arrays.stream(Objects.requireNonNull(cities)).findAny().isEmpty()) {
+            throw ServiceExceptionBuilder.throwNotFoundException(cityId);
+        }
+    }
+
 }
