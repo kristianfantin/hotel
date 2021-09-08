@@ -1,7 +1,7 @@
 package br.com.hotel.controller;
 
-import br.com.hotel.config.FunctionalTest;
 import br.com.hotel.http.dto.CityDTO;
+import br.com.hotel.config.AbstractIntegrationTest;
 import br.com.hotel.utils.MockDataHotel;
 import br.com.hotel.utils.MockRequestBuilderUtils;
 import org.junit.jupiter.api.Assertions;
@@ -27,8 +27,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
-@FunctionalTest
-class CheckInControllerTest {
+class CheckInControllerTest extends AbstractIntegrationTest {
 
     private static final String URL_TEMPLATE = "/api/hotels/check-in";
 
@@ -65,7 +64,6 @@ class CheckInControllerTest {
         assertEquals(HttpStatus.OK.value(), resultActions.andReturn().getResponse().getStatus());
         final String contentAsString = getContentAsString(resultActions);
         assertNotNull(contentAsString);
-        assertNotEquals("", contentAsString);
         assertTrue(contentAsString.contains("totalPrice\":6428.55"));
     }
 
@@ -86,10 +84,100 @@ class CheckInControllerTest {
 
         assertEquals(HttpStatus.NOT_FOUND.value(), resultActions.andReturn().getResponse().getStatus());
         assertNotNull(getContentAsString(resultActions));
-        assertNotEquals("", getContentAsString(resultActions));
-        Assertions.assertTrue(getContentAsString(resultActions).contains("No record found for id 0"));
+        assertTrue(getContentAsString(resultActions).contains("No record found for id 0"));
     }
 
+    @Test
+    void shouldGiveBadRequestFromCity() throws Exception {
+        Map<String, Object> params = new HashMap<>();
+        params.put("cityId", -1);
+        params.put("checkInDate", LocalDate.of(2021,11,12));
+        params.put("checkOutDate", LocalDate.of(2021,11,16));
+        params.put("numberOfAdults", 2);
+        params.put("numberOfChildren", 1);
+
+        final MockHttpServletRequestBuilder request = getMockHttpServletRequestBuilderGET(params, URL_TEMPLATE);
+        final ResultActions resultActions = mockMvc.perform(request);
+
+        assertEquals(HttpStatus.BAD_REQUEST.value(), resultActions.andReturn().getResponse().getStatus());
+        final String contentAsString = getContentAsString(resultActions);
+        assertNotNull(contentAsString);
+        assertTrue(contentAsString.contains("City Id must be positive"));
+    }
+
+    @Test
+    void shouldGiveBadRequestFromNumberOfAdults() throws Exception {
+        Map<String, Object> params = new HashMap<>();
+        params.put("cityId", MockDataHotel.PORTO_SEGURO);
+        params.put("checkInDate", LocalDate.of(2021,11,12));
+        params.put("checkOutDate", LocalDate.of(2021,11,16));
+        params.put("numberOfAdults", 0);
+        params.put("numberOfChildren", 1);
+
+        final MockHttpServletRequestBuilder request = getMockHttpServletRequestBuilderGET(params, URL_TEMPLATE);
+        final ResultActions resultActions = mockMvc.perform(request);
+
+        assertEquals(HttpStatus.BAD_REQUEST.value(), resultActions.andReturn().getResponse().getStatus());
+        final String contentAsString = getContentAsString(resultActions);
+        assertNotNull(contentAsString);
+        assertTrue(contentAsString.contains("Number of adults must be greater then 0"));
+    }
+
+    @Test
+    void shouldGiveBadRequestFromNumberOfChildren() throws Exception {
+        Map<String, Object> params = new HashMap<>();
+        params.put("cityId", MockDataHotel.PORTO_SEGURO);
+        params.put("checkInDate", LocalDate.of(2021,11,12));
+        params.put("checkOutDate", LocalDate.of(2021,11,16));
+        params.put("numberOfAdults", 2);
+        params.put("numberOfChildren", -1);
+
+        final MockHttpServletRequestBuilder request = getMockHttpServletRequestBuilderGET(params, URL_TEMPLATE);
+        final ResultActions resultActions = mockMvc.perform(request);
+
+        assertEquals(HttpStatus.BAD_REQUEST.value(), resultActions.andReturn().getResponse().getStatus());
+        final String contentAsString = getContentAsString(resultActions);
+        assertNotNull(contentAsString);
+        assertTrue(contentAsString.contains("Number of children must be positive or equal to 0"));
+    }
+
+    @Test
+    void shouldGiveBadRequestFromDateCheckInOut() throws Exception {
+        Map<String, Object> params = new HashMap<>();
+        params.put("cityId", MockDataHotel.PORTO_SEGURO);
+        params.put("checkInDate", LocalDate.of(2021,11,12));
+        params.put("checkOutDate", LocalDate.of(2021,11,11));
+        params.put("numberOfAdults", 2);
+        params.put("numberOfChildren", 0);
+
+        final MockHttpServletRequestBuilder request = getMockHttpServletRequestBuilderGET(params, URL_TEMPLATE);
+        final ResultActions resultActions = mockMvc.perform(request);
+
+        assertEquals(HttpStatus.BAD_REQUEST.value(), resultActions.andReturn().getResponse().getStatus());
+        final String contentAsString = getContentAsString(resultActions);
+        assertNotNull(contentAsString);
+        assertTrue(contentAsString.contains("CheckOut Date must be greater or equal than CheckIn Date"));
+    }
+
+    @Test
+    void shouldFindHotelWhereDataCheckInAndCheckOutAreEquals() throws Exception {
+        when(restTemplate.getForObject(anyString(), any())).thenReturn(mockDataHotel.getDataFromUrl());
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("cityId", MockDataHotel.PORTO_SEGURO);
+        params.put("checkInDate", LocalDate.of(2021,11,12));
+        params.put("checkOutDate", LocalDate.of(2021,11,12));
+        params.put("numberOfAdults", 2);
+        params.put("numberOfChildren", 1);
+
+        final MockHttpServletRequestBuilder request = getMockHttpServletRequestBuilderGET(params, URL_TEMPLATE);
+        final ResultActions resultActions = mockMvc.perform(request);
+
+        assertEquals(HttpStatus.OK.value(), resultActions.andReturn().getResponse().getStatus());
+        final String contentAsString = getContentAsString(resultActions);
+        assertNotNull(contentAsString);
+        assertTrue(contentAsString.contains("totalPrice\":1285.71"));
+    }
 
     private String getContentAsString(ResultActions resultActions) throws UnsupportedEncodingException {
         return resultActions.andReturn().getResponse().getContentAsString();

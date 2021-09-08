@@ -1,0 +1,12 @@
+spring:
+  cache:
+    type: redis
+  redis:
+    host: localhost
+    port: 6379
+    timetolive: 60
+
+api:
+  url:
+    description: https://cvcbackendhotel.herokuapp.com/hotels/avail/{ID_da_Cidade}
+    detail: https://cvcbackendhotel.herokuapp.com/hotels/{ID_Do_Hotel}

@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import java.security.InvalidParameterException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -93,6 +94,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     static {
         statusErrorsMap.put(NotFoundException.class, NOT_FOUND);
+        statusErrorsMap.put(InvalidParameterException.class, BAD_REQUEST);
     }
 
 }

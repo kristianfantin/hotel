@@ -1,6 +1,7 @@
 package br.com.hotel.utils;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -21,6 +22,10 @@ public class MockRequestBuilderUtils {
         params.forEach((nameParam, valueParam) -> request.param(nameParam, valueParam.toString()));
 
         return request;
+    }
+
+    public MockHttpServletRequestBuilder getMockHttpServletRequestBuilderDelete(String urlTemplate) {
+        return MockMvcRequestBuilders.delete(urlTemplate);
     }
 
 }
